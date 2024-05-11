@@ -1,15 +1,16 @@
-import app, { wss } from "./app";
-import messageModel from "./message/messageModel";
+import WebSocket from "ws";
+import server from "./app";
+import messageModel from "./task/taskModel";
 
-wss.on("connection", async (ws) => {
-  let clientId = null;
-  let token = null;
+const wss = new WebSocket.Server({ server });
 
-  ws.send(JSON.stringify({ action: "pendingTasks", payload: "pendingTasks" }));
-  ws.onmessage = async (message) => {
-    try {
-      const data = message.data;
-      console.log("Socket Data : ", data);
-    } catch (error) {}
-  };
+wss.on("connection", (ws: WebSocket) => {
+  console.log("Client connected");
+
+  ws.onmessage = (message) => {};
+  ws.on("close", () => {
+    console.log(`Disconnedted`);
+  });
 });
+
+export default wss;
