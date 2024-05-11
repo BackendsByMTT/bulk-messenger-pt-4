@@ -1,4 +1,4 @@
-import { wss } from "./app";
+import app, { wss } from "./app";
 import messageModel from "./message/messageModel";
 
 wss.on("connection", async (ws) => {
