@@ -7,17 +7,17 @@ import { config } from "../config/config";
 import { User } from "./userTypes";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { name, email, password } = req.body;
+  const { username, name, password, role } = req.body;
 
   // Validation
-  if (!name || !email || !password) {
+  if (!username || !name || !password || !role) {
     const error = createHttpError(400, "All fields are required");
     return next(error);
   }
 
   // Database call.
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ username });
     if (user) {
       const error = createHttpError(
         400,
@@ -36,9 +36,10 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   let newUser: User;
   try {
     newUser = await userModel.create({
+      username,
       name,
-      email,
       password: hashedPassword,
+      role,
     });
   } catch (err) {
     return next(createHttpError(500, "Error while creating user."));
@@ -46,10 +47,14 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 
   try {
     // Token generation JWT
-    const token = sign({ sub: newUser._id }, config.jwtSecret as string, {
-      expiresIn: "7d",
-      algorithm: "HS256",
-    });
+    const token = sign(
+      { name: newUser.username, role: newUser.role },
+      config.jwtSecret as string,
+      {
+        expiresIn: "7d",
+        algorithm: "HS256",
+      }
+    );
     // Response
     res.status(201).json({ accessToken: token });
   } catch (err) {
@@ -58,32 +63,42 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const loginUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  if (!email || !password) {
+  if (!username || !password) {
     return next(createHttpError(400, "All fields are required"));
   }
 
-  // todo: wrap in try catch.
-  const user = await userModel.findOne({ email });
-  if (!user) {
-    return next(createHttpError(404, "User not found."));
+  try {
+    const user = await userModel.findOne({ username });
+    if (!user) {
+      return next(createHttpError(404, "User not found."));
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return next(createHttpError(400, "Username or password incorrect!"));
+    }
+
+    const token = sign(
+      { name: user.username, role: user.role },
+      config.jwtSecret as string,
+      {
+        expiresIn: "7d",
+        algorithm: "HS256",
+      }
+    );
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.status(200).send("Logged in successfully");
+    console.log(`USERLOGIN ${user.username} WITH ROLE ${user.role}`);
+    res.redirect("/login");
+  } catch (error) {
+    next(error);
   }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
-    return next(createHttpError(400, "Username or password incorrect!"));
-  }
-
-  // todo: handle errors
-  // Create accesstoken
-  const token = sign({ sub: user._id }, config.jwtSecret as string, {
-    expiresIn: "7d",
-    algorithm: "HS256",
-  });
-
-  res.json({ accessToken: token });
 };
 
 export { createUser, loginUser };
