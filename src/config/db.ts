@@ -18,4 +18,9 @@ const connectDB = async () => {
   }
 };
 
+const checkCollection = async (collectionName: string) => {
+  const db = mongoose.connection.db;
+  const collection = db.collection(collectionName);
+};
+
 export default connectDB;

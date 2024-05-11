@@ -1,8 +1,12 @@
 import express from "express";
+import http from "http";
+import WebSocket from "ws";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import userRouter from "./user/userRouter";
 
 const app = express();
+const wss = new WebSocket.Server({ server: http.createServer(app) });
+
 app.use(express.json());
 
 // ROUTES
@@ -20,4 +24,5 @@ app.use("/api/users", userRouter);
 
 app.use(globalErrorHandler);
 
+export { wss };
 export default app;
