@@ -1,6 +1,8 @@
 import express from "express";
+import globalErrorHandler from "./middlewares/globalErrorHandler";
 
 const app = express();
+app.use(express.json());
 
 // ROUTES
 app.get("/", (req, res, next) => {
@@ -12,4 +14,7 @@ app.get("/", (req, res, next) => {
 
   res.json(health);
 });
+
+app.use(globalErrorHandler);
+
 export default app;
