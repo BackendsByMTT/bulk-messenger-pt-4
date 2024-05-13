@@ -17,9 +17,10 @@ const taskSchema = new mongoose.Schema<Task>(
     },
     agent: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
-    scheduled_at: {
+    scheduledAt: {
       type: Date,
       required: true,
     },
