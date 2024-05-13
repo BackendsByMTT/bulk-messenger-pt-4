@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import { Message } from "./messageTypes";
+import { Task } from "./taskTypes";
 
-const messageSchema = new mongoose.Schema<Message>(
+const taskSchema = new mongoose.Schema<Task>(
   {
     sent_to: {
       type: String,
@@ -16,14 +16,15 @@ const messageSchema = new mongoose.Schema<Message>(
       default: "pending",
     },
     agent: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
     scheduled_at: {
       type: Date,
+      required: true,
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.model<Message>("Message", messageSchema);
+export default mongoose.model<Task>("Task", taskSchema);

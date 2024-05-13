@@ -1,8 +1,10 @@
-export interface Message {
+import { User } from "../user/userTypes";
+
+export interface Task {
   _id: string;
   sent_to: string;
   message: string;
   status: string;
-  agent: string;
+  agent: User;
   scheduled_at: Date;
 }

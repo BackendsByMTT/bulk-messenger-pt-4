@@ -1,12 +1,12 @@
-import server, { wss } from "./src/app";
+import server from "./src/app";
 import { config } from "./src/config/config";
 import connectDB from "./src/config/db";
+import wss from "./src/socket";
 
 const startServer = async () => {
   await connectDB();
 
   const port = config.port || 3000;
-  const address = server!.address();
 
   server.listen(port, () => {
     console.log("Listening on port : ", port);
