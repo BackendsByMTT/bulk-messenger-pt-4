@@ -6,12 +6,12 @@ import {
   getTasks,
 } from "./taskController";
 import authenticate from "../middlewares/authenticate";
-
+import { isAdmin } from "../middlewares/middleAuth";
 const taskRouter = express.Router();
 
-taskRouter.post("/", createTask);
-taskRouter.get("/", getTasks);
-taskRouter.get("/:taskId", getTaskById);
-taskRouter.delete("/:taskId", deleteTask);
+taskRouter.post("/", authenticate, createTask);
+taskRouter.get("/", authenticate, getTasks);
+taskRouter.get("/:taskId", authenticate, getTaskById);
+taskRouter.delete("/:taskId", authenticate, deleteTask);
 
 export default taskRouter;
