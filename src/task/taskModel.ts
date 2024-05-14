@@ -15,8 +15,8 @@ const taskSchema = new mongoose.Schema<Task>(
       type: String,
       default: "pending",
     },
-    agent: {
-      type: mongoose.Schema.Types.ObjectId,
+    user: {
+      type: String,
       required: true,
     },
     scheduled_at: {

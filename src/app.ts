@@ -3,6 +3,7 @@ import http from "http";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import userRouter from "./user/userRouter";
 import taskRouter from "./task/taskRouter";
+import adminKeyRouter from "./superAdminKey/AdminKeyRoutes";
 
 const app = express();
 const server = http.createServer(app);
@@ -21,7 +22,7 @@ app.get("/", (req, res, next) => {
 
 app.use("/api/users", userRouter);
 app.use("/api/tasks", taskRouter);
-
+app.use("/api/keys", adminKeyRouter);
 app.use(globalErrorHandler);
 
 export default server;
