@@ -2,6 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import taskModel from "./taskModel";
 import jwt from "jsonwebtoken";
 import createHttpError from "http-errors";
+import {
+  fetchTaskAndSchedule,
+  isPendingTask,
+  calculateTaskScheduleTime,
+} from "../utils/util";
 
 export interface AuthRequest extends Request {
   userId: string;
@@ -12,55 +17,31 @@ const createTask = async (req: Request, res: Response, next: NextFunction) => {
   //   const agent = _req.userId;
 
   const { message, users, interval, usersPerInterval, agent } = req.body;
+  console.log("Request : ", req.body);
+
   try {
-    calculateTaskScheduleTime(
-      message,
-      users,
-      interval,
-      usersPerInterval,
-      agent
-    );
-    res.status(201).json({ message: "Tasks Added to Database" });
-  } catch (error) {
-    return next(createHttpError(500, "Error while getting tasks"));
-  }
-};
-
-const calculateTaskScheduleTime = (
-  message: string,
-  users: [],
-  intervalMinutes: number,
-  usersPerInterval: number,
-  agent: string
-) => {
-  const totalGroups = Math.ceil(users.length / usersPerInterval);
-  const currentTime = new Date();
-  let scheduledTime = currentTime;
-
-  for (let i = 0; i < totalGroups; i++) {
-    const startIndex = i * usersPerInterval;
-    const endIndex = Math.min(startIndex + usersPerInterval, users.length);
-
-    if (i === 0) {
-      scheduledTime = currentTime;
-    } else {
-      scheduledTime = new Date(
-        scheduledTime.getTime() + intervalMinutes * 60 * 1000
+    const isPending = await isPendingTask(agent);
+    if (isPending) {
+      return next(
+        createHttpError(
+          403,
+          "Cannot schedule new messages. \nPlease complete existing tasks first."
+        )
       );
     }
-    const groupUsers = users.slice(startIndex, endIndex);
-    groupUsers.forEach(async (user) => {
-      try {
-        await taskModel.create({
-          sent_to: user,
-          message,
-          agent,
-          scheduled_at: scheduledTime,
-        });
-      } catch (error) {
-        throw error;
-      }
-    });
+    await calculateTaskScheduleTime(
+      message,
+      users,
+      parseInt(interval),
+      parseInt(usersPerInterval),
+      agent
+    );
+
+    await fetchTaskAndSchedule(agent, parseInt(interval));
+    res.status(201).json({ message: "Tasks Added to Database" });
+  } catch (error) {
+    console.log(error);
+    return next(createHttpError(500, "Unable to Add Tasks"));
   }
 };
 

@@ -7,6 +7,7 @@ import { config } from "../config/config";
 import { User } from "./userTypes";
 import AdminKeyModel from "../superAdminKey/AdminKeyModel";
 const jwt = require("jsonwebtoken");
+import taskModel from "../task/taskModel";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const { username, name, password, role, status } = req.body;
@@ -239,6 +240,19 @@ const updateAgent = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const getAllTasks = async (req: Request, res: Response, next: NextFunction) => {
+  const { userId } = req.params;
+
+  try {
+    const tasks = await taskModel.find({ agent: userId });
+    res.json(tasks);
+  } catch (error) {
+    console.log(error);
+    return next(createHttpError(500, "Error fetching tasks"));
+  }
+};
+
+
 export {
   createUser,
   loginUser,
@@ -248,4 +262,7 @@ export {
   getAllAgents,
   getAgentByUsername,
   getUserByUsername,
+  getAllTasks
 };
+
+

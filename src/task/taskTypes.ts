@@ -5,6 +5,6 @@ export interface Task {
   sent_to: string;
   message: string;
   status: string;
-  user: User;
-  scheduled_at: Date;
+  agent: User;
+  scheduledAt: Date;
 }
