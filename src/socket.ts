@@ -1,6 +1,5 @@
 import WebSocket from "ws";
 import server from "./app";
-import messageModel from "./task/taskModel";
 import { clients } from "./utils/util";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { config } from "./config/config";
@@ -10,8 +9,9 @@ const wss = new WebSocket.Server({ server });
 wss.on("connection", (ws: WebSocket) => {
   let systemID: string | null = null;
   let token = null;
+  let agentID: string = "";
 
-  ws.onmessage = (message) => {
+  ws.onmessage = async (message) => {
     try {
       const data = JSON.parse(message.data.toString());
       if (data.action === "keepalive") {
@@ -27,6 +27,7 @@ wss.on("connection", (ws: WebSocket) => {
           token,
           config.jwtSecret!
         ) as JwtPayload;
+        agentID = decodedToken.userId;
 
         const agent = {
           agentID: decodedToken.userId,
@@ -35,7 +36,6 @@ wss.on("connection", (ws: WebSocket) => {
         };
 
         clients.set(agent.agentID, agent);
-        console.log("Agent added to clients Map:", agent);
 
         if (clients.has(agent.agentID)) {
           const existingAgent = clients.get(agent.agentID);

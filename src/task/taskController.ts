@@ -2,7 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import taskModel from "./taskModel";
 import jwt from "jsonwebtoken";
 import createHttpError from "http-errors";
-import { getPendingTasks } from "../utils/util";
+import {
+  fetchTaskAndSchedule,
+  isPendingTask,
+  calculateTaskScheduleTime,
+} from "../utils/util";
 
 export interface AuthRequest extends Request {
   userId: string;
@@ -16,6 +20,15 @@ const createTask = async (req: Request, res: Response, next: NextFunction) => {
   console.log("Request : ", req.body);
 
   try {
+    const isPending = await isPendingTask(agent);
+    if (isPending) {
+      return next(
+        createHttpError(
+          403,
+          "Cannot schedule new messages. \nPlease complete existing tasks first."
+        )
+      );
+    }
     await calculateTaskScheduleTime(
       message,
       users,
@@ -23,8 +36,8 @@ const createTask = async (req: Request, res: Response, next: NextFunction) => {
       parseInt(usersPerInterval),
       agent
     );
-    await getPendingTasks(agent, parseInt(usersPerInterval));
 
+    await fetchTaskAndSchedule(agent, parseInt(interval));
     res.status(201).json({ message: "Tasks Added to Database" });
   } catch (error) {
     console.log(error);
@@ -65,44 +78,6 @@ const deleteTask = async (req: Request, res: Response, next: NextFunction) => {
 
   await taskModel.deleteOne({ _id: taskId });
   res.status(204).json({ message: "Task deleted" });
-};
-
-const calculateTaskScheduleTime = async (
-  message: string,
-  users: [],
-  intervalMinutes: number,
-  usersPerInterval: number,
-  agent: string
-) => {
-  const totalGroups = Math.ceil(users.length / usersPerInterval);
-  const currentTime = new Date();
-  let scheduledTime = currentTime;
-
-  for (let i = 0; i < totalGroups; i++) {
-    const startIndex = i * usersPerInterval;
-    const endIndex = Math.min(startIndex + usersPerInterval, users.length);
-
-    if (i === 0) {
-      scheduledTime = currentTime;
-    } else {
-      scheduledTime = new Date(
-        scheduledTime.getTime() + intervalMinutes * 60 * 1000
-      );
-    }
-    const groupUsers = users.slice(startIndex, endIndex);
-    try {
-      for (const user of groupUsers) {
-        await taskModel.create({
-          sent_to: user,
-          message,
-          agent,
-          scheduled_at: scheduledTime,
-        });
-      }
-    } catch (error) {
-      throw error;
-    }
-  }
 };
 
 export { createTask, getTasks, getTaskById, deleteTask };
