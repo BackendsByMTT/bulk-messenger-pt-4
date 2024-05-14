@@ -1,8 +1,11 @@
 import express from "express";
+import http from "http";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import userRouter from "./user/userRouter";
+import taskRouter from "./task/taskRouter";
 
 const app = express();
+const server = http.createServer(app);
 app.use(express.json());
 
 // ROUTES
@@ -17,7 +20,8 @@ app.get("/", (req, res, next) => {
 });
 
 app.use("/api/users", userRouter);
+app.use("/api/tasks", taskRouter);
 
 app.use(globalErrorHandler);
 
-export default app;
+export default server;

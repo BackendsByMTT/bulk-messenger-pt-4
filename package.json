@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon server.ts"
+    "dev": "nodemon server.ts",
+    "build": "npx"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +18,9 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20.12.11",
+    "@types/node-cron": "^3.0.11",
+    "@types/node-schedule": "^2.1.7",
+    "@types/ws": "^8.5.10",
     "eslint": "^8.57.0",
     "globals": "^15.2.0",
     "nodemon": "^3.1.0",
@@ -30,6 +34,10 @@
     "express": "^4.19.2",
     "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.3.4"
+    "mongoose": "^8.3.4",
+    "node-cron": "^3.0.3",
+    "node-schedule": "^2.1.1",
+    "tsc": "^2.0.4",
+    "ws": "^8.17.0"
   }
 }

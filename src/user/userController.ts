@@ -5,6 +5,7 @@ import userModel from "./userModel";
 import { sign } from "jsonwebtoken";
 import { config } from "../config/config";
 import { User } from "./userTypes";
+import taskModel from "../task/taskModel";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
@@ -86,4 +87,17 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   res.json({ accessToken: token });
 };
 
-export { createUser, loginUser };
+const getAllTasks = async (req: Request, res: Response, next: NextFunction) => {
+  const { userId } = req.params;
+
+  try {
+    const tasks = await taskModel.find({ agent: userId });
+    res.json(tasks);
+  } catch (error) {
+    console.log(error);
+    return next(createHttpError(500, "Error fetching tasks"));
+  }
+};
+
+
+export { createUser, loginUser, getAllTasks };
