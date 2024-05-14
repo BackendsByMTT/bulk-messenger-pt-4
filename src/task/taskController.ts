@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import createHttpError from "http-errors";
 import {
   fetchTaskAndSchedule,
-  isPendingTask,
+  isExistingTask,
   calculateTaskScheduleTime,
 } from "../utils/util";
 
@@ -20,7 +20,7 @@ const createTask = async (req: Request, res: Response, next: NextFunction) => {
   console.log("Request : ", req.body);
 
   try {
-    const isPending = await isPendingTask(agent);
+    const isPending = await isExistingTask(agent);
     if (isPending) {
       return next(
         createHttpError(

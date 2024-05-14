@@ -9,6 +9,7 @@ export interface AuthRequest extends Request {
 
 const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const token = req.header("Authorization");
+  console.log("Token : ", token);
 
   if (!token) {
     return next(createHttpError(401, "Authorization token is required"));
@@ -22,6 +23,8 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
 
     next();
   } catch (error) {
+    console.log("Error : ", error);
+
     return next(createHttpError(401, "Token expired"));
   }
 };

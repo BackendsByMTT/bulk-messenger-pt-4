@@ -2,6 +2,7 @@ import { scheduleJob, Job } from "node-schedule";
 import taskModel from "../task/taskModel";
 import wss from "../socket";
 import { Task } from "../task/taskTypes";
+import { WebSocket } from "ws";
 
 export const clients = new Map();
 export const scheduledTasks = new Map();
@@ -44,9 +45,9 @@ export const calculateTaskScheduleTime = async (
   }
 };
 
-export const isPendingTask = async (agentId: string) => {
+export const isExistingTask = async (agentId: string) => {
   const tasks: Task[] = await taskModel.find({
-    status: "pending",
+    $or: [{ status: "pending" }, { status: "scheduled" }],
     agent: agentId,
   });
 
@@ -103,7 +104,6 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
       } else {
         await taskModel.updateOne({ _id: task._id }, { status: "scheduled" });
         const job = scheduleJob(date, async () => {
-          await taskModel.updateOne({ _id: task._id }, { status: "success" });
           console.log(
             `Executed Sucessfully : ${task.sent_to} : ${task.message}`
           );
@@ -113,9 +113,14 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
             task: task,
           };
 
-          const ws = clients.get(agent);
-          if (ws) {
-            ws.send(JSON.stringify(payload));
+          const client = clients.get(agent);
+          if (
+            client &&
+            client.socketID &&
+            client.socketID.readyState === WebSocket.OPEN
+          ) {
+            client.socketID.send(JSON.stringify(payload));
+            console.log("Socket Message Sent to client");
           }
         });
         console.log(`Job scheduled for task ${task._id}:`, job);
@@ -128,5 +133,13 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
     console.log("fetchTaskAndSchedule : ", agent);
   } catch (error) {
     console.error("Error scheduling tasks:", error);
+  }
+};
+
+export const updateTaskStatus = async (taskID: string, status: string) => {
+  try {
+    await taskModel.updateOne({ _id: taskID }, { status: status });
+  } catch (error) {
+    console.log(error);
   }
 };
