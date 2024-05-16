@@ -82,25 +82,47 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
           console.log(`No job found for task ${task._id}`);
         }
 
-        // await taskModel.updateOne({ _id: task._id }, { status: "cancelled" });
-        const lastScheduledTask = await taskModel
-          .findOne({ agent: agent })
-          .sort({ scheduledAt: -1 })
-          .select({ scheduledAt: 1, _id: 0 });
+        const payload = {
+          action: "sendMessageToUser",
+          task: task,
+        };
 
-        if (lastScheduledTask) {
-          const lastScheduledTaskTime = lastScheduledTask.scheduledAt;
-
-          const newScheduledAt = new Date(
-            lastScheduledTaskTime.getTime() + interval * 60 * 1000
-          );
-          await taskModel.updateOne(
-            { _id: task._id },
-            { status: "pending", scheduledAt: newScheduledAt }
-          );
+        const client = clients.get(agent);
+        if (client) {
+          if (client.socketID) {
+            if (client.socketID.readyState === WebSocket.OPEN) {
+              client.socketID.send(JSON.stringify(payload));
+            } else {
+              await taskModel.updateOne(
+                { _id: task._id },
+                { status: "failed" }
+              );
+            }
+          }
         } else {
           await taskModel.updateOne({ _id: task._id }, { status: "failed" });
         }
+        await taskModel.updateOne({ _id: task._id }, { status: "scheduled" });
+
+        // await taskModel.updateOne({ _id: task._id }, { status: "cancelled" });
+        // const lastScheduledTask = await taskModel
+        //   .findOne({ agent: agent })
+        //   .sort({ scheduledAt: -1 })
+        //   .select({ scheduledAt: 1, _id: 0 });
+
+        // if (lastScheduledTask) {
+        //   const lastScheduledTaskTime = lastScheduledTask.scheduledAt;
+
+        //   const newScheduledAt = new Date(
+        //     lastScheduledTaskTime.getTime() + interval * 60 * 1000
+        //   );
+        //   await taskModel.updateOne(
+        //     { _id: task._id },
+        //     { status: "pending", scheduledAt: newScheduledAt }
+        //   );
+        // } else {
+        //   await taskModel.updateOne({ _id: task._id }, { status: "failed" });
+        // }
       } else {
         await taskModel.updateOne({ _id: task._id }, { status: "scheduled" });
         const job = scheduleJob(date, async () => {
@@ -114,16 +136,22 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
           };
 
           const client = clients.get(agent);
-          if (
-            client &&
-            client.socketID &&
-            client.socketID.readyState === WebSocket.OPEN
-          ) {
-            client.socketID.send(JSON.stringify(payload));
-            console.log("Socket Message Sent to client");
+
+          if (client) {
+            if (client.socketID) {
+              if (client.socketID.readyState === WebSocket.OPEN) {
+                client.socketID.send(JSON.stringify(payload));
+              } else {
+                await taskModel.updateOne(
+                  { _id: task._id },
+                  { status: "failed" }
+                );
+              }
+            }
+          } else {
+            await taskModel.updateOne({ _id: task._id }, { status: "failed" });
           }
         });
-        console.log(`Job scheduled for task ${task._id}:`, job);
         scheduledTasks.set(task._id, job);
       }
     }

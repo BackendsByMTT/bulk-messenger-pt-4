@@ -17,7 +17,18 @@ const createTask = async (req: Request, res: Response, next: NextFunction) => {
   //   const agent = _req.userId;
 
   const { message, users, interval, usersPerInterval, agent } = req.body;
+
   console.log("Request : ", req.body);
+  // Check if all required fields are present
+  if (!message || !users || !interval || !usersPerInterval || !agent) {
+    return next(
+      createHttpError(400, "Missing required fields in the request.")
+    );
+  }
+
+  if (users.length === 0) {
+    return next(createHttpError(400, "Please provide users to send messages"));
+  }
 
   try {
     const isPending = await isExistingTask(agent);
@@ -67,6 +78,25 @@ const getTaskById = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const deleteMultipleNonScheduledTasks = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { taskIds } = req.body;
+  if (!Array.isArray(taskIds) || taskIds.length === 0) {
+    return next(createHttpError(400, "No task IDs provided."));
+  }
+
+  try {
+    await taskModel.deleteMany({ _id: { $in: taskIds } });
+    res.status(200).json({ message: "Tasks deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting tasks:", error);
+    return next(createHttpError(500, "Failed to delete tasks."));
+  }
+};
+
 const deleteTask = async (req: Request, res: Response, next: NextFunction) => {
   const taskId = req.params.taskId;
 
@@ -80,4 +110,10 @@ const deleteTask = async (req: Request, res: Response, next: NextFunction) => {
   res.status(204).json({ message: "Task deleted" });
 };
 
-export { createTask, getTasks, getTaskById, deleteTask };
+export {
+  createTask,
+  getTasks,
+  getTaskById,
+  deleteMultipleNonScheduledTasks,
+  deleteTask,
+};
