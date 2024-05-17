@@ -7,7 +7,6 @@ import {
   getTasks,
 } from "./taskController";
 import authenticate from "../middlewares/authenticate";
-import { isAdmin } from "../middlewares/middleAuth";
 const taskRouter = express.Router();
 
 taskRouter.post("/", authenticate, createTask);

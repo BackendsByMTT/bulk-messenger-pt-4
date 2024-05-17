@@ -26,9 +26,10 @@ const trashSchema = new mongoose.Schema<Trash>(
     },
     reason: {
       type: String,
+      required: true,
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.model<Trash>("Task", trashSchema);
+export default mongoose.model<Trash>("Trash", trashSchema);

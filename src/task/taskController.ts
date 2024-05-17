@@ -6,11 +6,10 @@ import {
   fetchTaskAndSchedule,
   isExistingTask,
   calculateTaskScheduleTime,
+  scheduledTasks,
+  AuthRequest,
 } from "../utils/util";
-
-export interface AuthRequest extends Request {
-  userId: string;
-}
+import trashModel from "../trash/trashModel";
 
 const createTask = async (req: Request, res: Response, next: NextFunction) => {
   //   const _req = req as AuthRequest;
@@ -57,10 +56,23 @@ const createTask = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const getTasks = async (req: Request, res: Response, next: NextFunction) => {
+  const _req = req as AuthRequest;
   try {
-    const tasks = await taskModel.find({});
-    res.json(tasks);
-  } catch (error) {}
+    let tasks;
+    if (_req.userRole === "admin") {
+      tasks = await taskModel.find();
+    } else if (_req.userRole === "agent") {
+      tasks = await taskModel.find({ agent: _req.userId });
+    } else {
+      return next(
+        createHttpError(403, "Access denied: Suspicious activity detected.")
+      );
+    }
+    res.status(200).json(tasks);
+  } catch (error) {
+    console.log(error);
+    return next(createHttpError(500, "Error fetching trashes"));
+  }
 };
 
 const getTaskById = async (req: Request, res: Response, next: NextFunction) => {
@@ -83,13 +95,70 @@ const deleteMultipleNonScheduledTasks = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { taskIds } = req.body;
+  const { taskIds, type, reason } = req.body;
+  console.log("REQ : ", req.body);
+
   if (!Array.isArray(taskIds) || taskIds.length === 0) {
     return next(createHttpError(400, "No task IDs provided."));
   }
 
+  if (!type) {
+    return next(createHttpError(400, "Unable to find type of tasks"));
+  }
+
+  if (type !== "normal" && type !== "scheduled") {
+    return next(
+      createHttpError(
+        400,
+        "Invalid task type. Type must be either 'normal' or 'scheduled'."
+      )
+    );
+  }
+
   try {
-    await taskModel.deleteMany({ _id: { $in: taskIds } });
+    if (type === "normal") {
+      const tasksToMove = await taskModel.find({ _id: { $in: taskIds } });
+
+      for (const task of tasksToMove) {
+        const trashTask = new trashModel({
+          sent_to: task.sent_to,
+          message: task.message,
+          status: task.status,
+          agent: task.agent,
+          scheduledAt: task.scheduledAt,
+          reason: reason, // Optional: Add a reason or note
+        });
+        await trashTask.save(); // Save the task to the trash collection
+      }
+      await taskModel.deleteMany({ _id: { $in: taskIds } });
+      return res.status(200).json({ message: "Non Scheduled Task Deleted" });
+    } else if (type === "scheduled") {
+      const taskToMove = await taskModel.find({ _id: { $in: taskIds } });
+
+      for (const task of taskToMove) {
+        const job = scheduledTasks.get(task._id);
+        console.log(`Job for task ${task._id}:`, job);
+
+        if (job) {
+          job.cancel();
+          console.log(`Cancelled job for task ${task._id}`);
+        } else {
+          console.log(`No job found for task ${task._id}`);
+        }
+        const trashTask = new trashModel({
+          sent_to: task.sent_to,
+          message: task.message,
+          status: task.status,
+          agent: task.agent,
+          scheduledAt: task.scheduledAt,
+          reason: reason, // Optional: Add a reason or note
+        });
+
+        await trashTask.save();
+      }
+      await taskModel.deleteMany({ _id: { $in: taskIds } });
+      return res.status(200).json({ message: "Scheduled Task Deleted" });
+    }
     res.status(200).json({ message: "Tasks deleted successfully." });
   } catch (error) {
     console.error("Error deleting tasks:", error);
