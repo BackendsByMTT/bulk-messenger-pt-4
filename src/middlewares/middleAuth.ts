@@ -3,10 +3,7 @@ import { config } from "../config/config";
 import { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
 import userModel from "../user/userModel";
-
-export interface AuthRequest extends Request {
-  userId: string;
-}
+import { AuthRequest, CustomJwtPayload } from "../utils/util";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.header("Authorization");
@@ -18,7 +15,8 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const decodedToken = jwt.verify(
       accessToken,
       config.jwtSecret as string
-    ) as jwt.JwtPayload;
+    ) as CustomJwtPayload;
+
     const user = decodedToken.name;
     const checkForAdmin = await userModel.findOne({
       username: user,
@@ -27,7 +25,9 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
 
     if (!checkForAdmin) {
       const _req = req as AuthRequest;
-      _req.userId = decodedToken.sub as string;
+      _req.userId = decodedToken.userId;
+      _req.userRole = decodedToken.role;
+
       return next(createHttpError(401, "You are not an Admin"));
     } else {
       console.log("YOU ARE ADMIN");
@@ -37,6 +37,7 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
     return next(createHttpError(401, "Admin Authentication Failed"));
   }
 };
+
 const checkUserStatus = async (
   req: Request,
   res: Response,

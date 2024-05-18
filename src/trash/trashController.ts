@@ -3,10 +3,7 @@ import taskModel from "./trashModel";
 import createHttpError from "http-errors";
 import { Trash } from "./trashTypes";
 import trashModel from "./trashModel";
-
-export interface AuthRequest extends Request {
-  userId: string;
-}
+import { AuthRequest } from "../utils/util";
 
 async function createTrash(trashData: Trash): Promise<Trash | null> {
   try {
@@ -18,3 +15,28 @@ async function createTrash(trashData: Trash): Promise<Trash | null> {
     return null;
   }
 }
+
+export const getAllTrashes = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const _req = req as AuthRequest;
+
+  try {
+    let trashData;
+    if (_req.userRole === "admin") {
+      trashData = await trashModel.find();
+    } else if (_req.userRole === "agent") {
+      trashData = await trashModel.find({ agent: _req.userId });
+    } else {
+      return next(
+        createHttpError(403, "Access denied: Suspicious activity detected.")
+      );
+    }
+    res.status(200).json(trashData);
+  } catch (error) {
+    console.log(error);
+    return next(createHttpError(500, "Error fetching trashes"));
+  }
+};

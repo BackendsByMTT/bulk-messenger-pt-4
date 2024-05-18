@@ -3,9 +3,19 @@ import taskModel from "../task/taskModel";
 import wss from "../socket";
 import { Task } from "../task/taskTypes";
 import { WebSocket } from "ws";
+import { Request } from "express";
+import { JwtPayload } from "jsonwebtoken";
 
 export const clients = new Map();
 export const scheduledTasks = new Map();
+
+export interface AuthRequest extends Request {
+  userId: string;
+  userRole: string;
+}
+export interface CustomJwtPayload extends JwtPayload {
+  role: string;
+}
 
 export const calculateTaskScheduleTime = async (
   message: string,
@@ -106,26 +116,6 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
           );
         }
         await taskModel.updateOne({ _id: task._id }, { status: "scheduled" });
-
-        // await taskModel.updateOne({ _id: task._id }, { status: "cancelled" });
-        // const lastScheduledTask = await taskModel
-        //   .findOne({ agent: agent })
-        //   .sort({ scheduledAt: -1 })
-        //   .select({ scheduledAt: 1, _id: 0 });
-
-        // if (lastScheduledTask) {
-        //   const lastScheduledTaskTime = lastScheduledTask.scheduledAt;
-
-        //   const newScheduledAt = new Date(
-        //     lastScheduledTaskTime.getTime() + interval * 60 * 1000
-        //   );
-        //   await taskModel.updateOne(
-        //     { _id: task._id },
-        //     { status: "pending", scheduledAt: newScheduledAt }
-        //   );
-        // } else {
-        //   await taskModel.updateOne({ _id: task._id }, { status: "failed" });
-        // }
       } else {
         await taskModel.updateOne({ _id: task._id }, { status: "scheduled" });
         const job = scheduleJob(date, async () => {

@@ -1,8 +1,9 @@
 import express from "express";
 
 import authenticate from "../middlewares/authenticate";
-const taskRouter = express.Router();
+import { getAllTrashes } from "./trashController";
+const trashRouter = express.Router();
 
-// taskRouter.post("/", authenticate, createTrash);
+trashRouter.get("/", authenticate, getAllTrashes);
 
-export default taskRouter;
+export default trashRouter;
