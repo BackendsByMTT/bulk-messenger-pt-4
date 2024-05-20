@@ -135,7 +135,10 @@ const deleteMultipleNonScheduledTasks = async (
       const taskToMove = await taskModel.find({ _id: { $in: taskIds } });
 
       for (const task of taskToMove) {
-        const job = scheduledTasks.get(task._id);
+        console.log("TO BE DELETED : ", task._id);
+        const taskIdString = task._id.toString();
+
+        const job = scheduledTasks.get(taskIdString);
         console.log(`Job for task ${task._id}:`, job);
 
         if (job) {

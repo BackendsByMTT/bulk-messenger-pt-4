@@ -120,7 +120,7 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
         await taskModel.updateOne({ _id: task._id }, { status: "scheduled" });
         const job = scheduleJob(date, async () => {
           console.log(
-            `Executed Sucessfully : ${task.sent_to} : ${task.message}`
+            `Executed Sucessfully : ${task.sent_to} : ${task.message} : ${task._id}`
           );
 
           const payload = {
@@ -148,7 +148,10 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
             );
           }
         });
-        scheduledTasks.set(task._id, job);
+
+        const taskIdString = task._id.toString();
+        scheduledTasks.set(taskIdString, job);
+        console.log("Sch : ", scheduledTasks);
       }
     }
 
