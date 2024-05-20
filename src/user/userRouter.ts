@@ -8,12 +8,13 @@ import {
   getAllAgents,
   getAgentByUsername,
   getUserByUsername,
-  getAllTasks
+  getAllTasks,
 } from "./userController";
 
 const userRouter = express.Router();
 import { checkUserStatus, isAdmin } from "../middlewares/middleAuth";
 import authenticate from "../middlewares/authenticate";
+
 userRouter.get("/", (req: Request, res: Response, next: NextFunction) => {
   res.json({ message: "User Route" });
 });
@@ -35,6 +36,6 @@ userRouter.put("/agents/:username", isAdmin, updateAgent);
 userRouter.get("/agents/:username", isAdmin, getAgentByUsername);
 
 // GET AGENT TASKS
-userRouter.get("/:userId/tasks", getAllTasks);
+userRouter.get("/:userId/tasks", authenticate, getAllTasks);
 
 export default userRouter;

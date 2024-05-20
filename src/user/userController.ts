@@ -8,6 +8,7 @@ import { User } from "./userTypes";
 import AdminKeyModel from "../superAdminKey/AdminKeyModel";
 const jwt = require("jsonwebtoken");
 import taskModel from "../task/taskModel";
+import trashModel from "../trash/trashModel";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const { username, name, password, role, status } = req.body;
@@ -252,7 +253,6 @@ const getAllTasks = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-
 export {
   createUser,
   loginUser,
@@ -262,7 +262,5 @@ export {
   getAllAgents,
   getAgentByUsername,
   getUserByUsername,
-  getAllTasks
+  getAllTasks,
 };
-
-

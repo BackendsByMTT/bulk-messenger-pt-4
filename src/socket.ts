@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import server from "./app";
-import { clients } from "./utils/util";
+import { clients, updateTaskStatus } from "./utils/util";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { config } from "./config/config";
 
@@ -47,6 +47,12 @@ wss.on("connection", (ws: WebSocket) => {
           clients.set(agent.agentID, agent);
           console.log("Agent added to clients Map:", agent);
         }
+      }
+
+      if (data.action === "updateTask") {
+        console.log("Update Task : ", data.payload);
+        const { id, status, reason } = data.payload;
+        await updateTaskStatus(id, status, reason);
       }
     } catch (error) {
       console.log(error);

@@ -2,9 +2,20 @@ import { scheduleJob, Job } from "node-schedule";
 import taskModel from "../task/taskModel";
 import wss from "../socket";
 import { Task } from "../task/taskTypes";
+import { WebSocket } from "ws";
+import { Request } from "express";
+import { JwtPayload } from "jsonwebtoken";
 
 export const clients = new Map();
 export const scheduledTasks = new Map();
+
+export interface AuthRequest extends Request {
+  userId: string;
+  userRole: string;
+}
+export interface CustomJwtPayload extends JwtPayload {
+  role: string;
+}
 
 export const calculateTaskScheduleTime = async (
   message: string,
@@ -44,9 +55,9 @@ export const calculateTaskScheduleTime = async (
   }
 };
 
-export const isPendingTask = async (agentId: string) => {
+export const isExistingTask = async (agentId: string) => {
   const tasks: Task[] = await taskModel.find({
-    status: "pending",
+    $or: [{ status: "pending" }, { status: "scheduled" }],
     agent: agentId,
   });
 
@@ -81,31 +92,35 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
           console.log(`No job found for task ${task._id}`);
         }
 
-        // await taskModel.updateOne({ _id: task._id }, { status: "cancelled" });
-        const lastScheduledTask = await taskModel
-          .findOne({ agent: agent })
-          .sort({ scheduledAt: -1 })
-          .select({ scheduledAt: 1, _id: 0 });
+        const payload = {
+          action: "sendMessageToUser",
+          task: task,
+        };
 
-        if (lastScheduledTask) {
-          const lastScheduledTaskTime = lastScheduledTask.scheduledAt;
-
-          const newScheduledAt = new Date(
-            lastScheduledTaskTime.getTime() + interval * 60 * 1000
-          );
+        const client = clients.get(agent);
+        if (client) {
+          if (client.socketID) {
+            if (client.socketID.readyState === WebSocket.OPEN) {
+              client.socketID.send(JSON.stringify(payload));
+            } else {
+              await taskModel.updateOne(
+                { _id: task._id },
+                { status: "failed", reason: "SOCKET CONNECTION FAILED" }
+              );
+            }
+          }
+        } else {
           await taskModel.updateOne(
             { _id: task._id },
-            { status: "pending", scheduledAt: newScheduledAt }
+            { status: "failed", reason: "SOCKET CONNECTION FAILED" }
           );
-        } else {
-          await taskModel.updateOne({ _id: task._id }, { status: "failed" });
         }
+        await taskModel.updateOne({ _id: task._id }, { status: "scheduled" });
       } else {
         await taskModel.updateOne({ _id: task._id }, { status: "scheduled" });
         const job = scheduleJob(date, async () => {
-          await taskModel.updateOne({ _id: task._id }, { status: "success" });
           console.log(
-            `Executed Sucessfully : ${task.sent_to} : ${task.message}`
+            `Executed Sucessfully : ${task.sent_to} : ${task.message} : ${task._id}`
           );
 
           const payload = {
@@ -113,13 +128,30 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
             task: task,
           };
 
-          const ws = clients.get(agent);
-          if (ws) {
-            ws.send(JSON.stringify(payload));
+          const client = clients.get(agent);
+
+          if (client) {
+            if (client.socketID) {
+              if (client.socketID.readyState === WebSocket.OPEN) {
+                client.socketID.send(JSON.stringify(payload));
+              } else {
+                await taskModel.updateOne(
+                  { _id: task._id },
+                  { status: "failed", reason: "SOCKET CONNECTION FAILED" }
+                );
+              }
+            }
+          } else {
+            await taskModel.updateOne(
+              { _id: task._id },
+              { status: "failed", reason: "SOCKET CONNECTION FAILED" }
+            );
           }
         });
-        console.log(`Job scheduled for task ${task._id}:`, job);
-        scheduledTasks.set(task._id, job);
+
+        const taskIdString = task._id.toString();
+        scheduledTasks.set(taskIdString, job);
+        console.log("Sch : ", scheduledTasks);
       }
     }
 
@@ -128,5 +160,21 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
     console.log("fetchTaskAndSchedule : ", agent);
   } catch (error) {
     console.error("Error scheduling tasks:", error);
+  }
+};
+
+export const updateTaskStatus = async (
+  taskID: string,
+  status: string,
+  reason: string
+) => {
+  try {
+    await taskModel.updateOne(
+      { _id: taskID },
+      { status: status, reason: reason }
+    );
+    console.log(taskID, status, reason, "TASK UPDATED WITH THIS");
+  } catch (error) {
+    console.log(error);
   }
 };
