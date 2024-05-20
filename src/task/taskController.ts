@@ -18,7 +18,6 @@ const createTask = async (req: Request, res: Response, next: NextFunction) => {
   const { message, users, interval, usersPerInterval, agent } = req.body;
 
   console.log("Request : ", req.body);
-  // Check if all required fields are present
   if (!message || !users || !interval || !usersPerInterval || !agent) {
     return next(
       createHttpError(400, "Missing required fields in the request.")

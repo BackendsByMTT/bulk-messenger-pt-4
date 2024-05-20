@@ -20,6 +20,10 @@ const taskSchema = new mongoose.Schema<Task>(
       ref: "User",
       required: true,
     },
+    reason: {
+      type: String,
+      default: "pending",
+    },
     scheduledAt: {
       type: Date,
       required: true,

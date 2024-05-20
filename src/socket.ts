@@ -51,8 +51,8 @@ wss.on("connection", (ws: WebSocket) => {
 
       if (data.action === "updateTask") {
         console.log("Update Task : ", data.payload);
-        const { id, status } = data.payload;
-        await updateTaskStatus(id, status);
+        const { id, status, reason } = data.payload;
+        await updateTaskStatus(id, status, reason);
       }
     } catch (error) {
       console.log(error);

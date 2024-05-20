@@ -105,12 +105,15 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
             } else {
               await taskModel.updateOne(
                 { _id: task._id },
-                { status: "failed" }
+                { status: "failed", reason: "SOCKET CONNECTION FAILED" }
               );
             }
           }
         } else {
-          await taskModel.updateOne({ _id: task._id }, { status: "failed" });
+          await taskModel.updateOne(
+            { _id: task._id },
+            { status: "failed", reason: "SOCKET CONNECTION FAILED" }
+          );
         }
         await taskModel.updateOne({ _id: task._id }, { status: "scheduled" });
       } else {
@@ -134,12 +137,15 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
               } else {
                 await taskModel.updateOne(
                   { _id: task._id },
-                  { status: "failed" }
+                  { status: "failed", reason: "SOCKET CONNECTION FAILED" }
                 );
               }
             }
           } else {
-            await taskModel.updateOne({ _id: task._id }, { status: "failed" });
+            await taskModel.updateOne(
+              { _id: task._id },
+              { status: "failed", reason: "SOCKET CONNECTION FAILED" }
+            );
           }
         });
         scheduledTasks.set(task._id, job);
@@ -154,9 +160,17 @@ export const fetchTaskAndSchedule = async (agent: string, interval: number) => {
   }
 };
 
-export const updateTaskStatus = async (taskID: string, status: string) => {
+export const updateTaskStatus = async (
+  taskID: string,
+  status: string,
+  reason: string
+) => {
   try {
-    await taskModel.updateOne({ _id: taskID }, { status: status });
+    await taskModel.updateOne(
+      { _id: taskID },
+      { status: status, reason: reason }
+    );
+    console.log(taskID, status, reason, "TASK UPDATED WITH THIS");
   } catch (error) {
     console.log(error);
   }
