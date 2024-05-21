@@ -2,9 +2,9 @@
   "name": "bulk-messenger",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "dev": "nodemon server.ts",
+    "dev": "nodemon app.ts",
     "build": "npx"
   },
   "author": "",

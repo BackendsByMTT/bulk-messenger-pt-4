@@ -17,8 +17,7 @@ app.get("/", (req, res, next) => {
     message: "OK",
     timestamp: new Date().toLocaleDateString(),
   };
-
-  res.json(health);
+  res.status(200).json(health);
 });
 
 app.use("/api/users", userRouter);
