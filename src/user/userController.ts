@@ -26,7 +26,6 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 
   const key = req.header("Authorization")?.split(" ")[1];
-  console.log(key, "adminkeys");
 
   try {
     if (role === "admin") {
