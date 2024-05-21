@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.ts",
-    "build": "npx"
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",
@@ -37,7 +37,6 @@
     "mongoose": "^8.3.4",
     "node-cron": "^3.0.3",
     "node-schedule": "^2.1.1",
-    "tsc": "^2.0.4",
     "ws": "^8.17.0"
   }
 }
