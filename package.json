@@ -2,10 +2,11 @@
   "name": "bulk-messenger",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "dev": "nodemon app.ts",
-    "build": "tsc"
+    "dev": "nodemon src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js"
   },
   "author": "",
   "license": "ISC",
