@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import server from "./app";
+import server from "./server";
 import { clients, updateTaskStatus } from "./utils/util";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { config } from "./config/config";
