@@ -23,11 +23,11 @@ userRouter.post("/register", isAdmin, createUser);
 // LOGIN
 userRouter.post("/login", checkUserStatus, loginUser);
 // GET ALL USERS
-userRouter.get("/allUsers", getAllUser);
+userRouter.get("/allUsers", authenticate, getAllUser);
 // GET ALL AGENTS
 userRouter.get("/agents", isAdmin, getAllAgents);
 // GET ALL USERS
-userRouter.get("/agents/:username", getUserByUsername);
+userRouter.get("/agents/:username", isAdmin, getUserByUsername);
 // DELETE A USER BY USERNAME
 userRouter.delete("/agents/:username", isAdmin, deleteAgent);
 // UPDATE A USER BY USERNAME

@@ -2,10 +2,11 @@
   "name": "bulk-messenger",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "dev": "nodemon app.ts",
-    "build": "npx"
+    "start": "nodemon app.js",
+    "build": "tsc",
+    "dev": "tsc-watch --onSuccess \"nodemon dist/app.js\""
   },
   "author": "",
   "license": "ISC",
@@ -37,7 +38,7 @@
     "mongoose": "^8.3.4",
     "node-cron": "^3.0.3",
     "node-schedule": "^2.1.1",
-    "tsc": "^2.0.4",
+    "tsc-watch": "^6.2.0",
     "ws": "^8.17.0"
   }
 }
