@@ -10,9 +10,13 @@ const userRouter_1 = __importDefault(require("./user/userRouter"));
 const taskRouter_1 = __importDefault(require("./task/taskRouter"));
 const AdminKeyRoutes_1 = __importDefault(require("./superAdminKey/AdminKeyRoutes"));
 const trashRouter_1 = __importDefault(require("./trash/trashRouter"));
+const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 app.use(express_1.default.json());
+app.use((0, cors_1.default)({
+    origin: "*",
+}));
 // ROUTES
 app.get("/", (req, res, next) => {
     const health = {
