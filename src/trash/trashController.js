@@ -33,7 +33,7 @@ const getAllTrashes = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     try {
         let trashData;
         if (_req.userRole === "admin") {
-            trashData = yield trashModel_1.default.find();
+            trashData = yield trashModel_1.default.find().populate("agent", "name");
         }
         else if (_req.userRole === "agent") {
             trashData = yield trashModel_1.default.find({ agent: _req.userId });

@@ -8,7 +8,6 @@ const jsonwebtoken_1 = require("jsonwebtoken");
 const config_1 = require("../config/config");
 const authenticate = (req, res, next) => {
     const token = req.header("Authorization");
-    console.log("Token : ", token);
     if (!token) {
         return next((0, http_errors_1.default)(401, "Authorization token is required"));
     }

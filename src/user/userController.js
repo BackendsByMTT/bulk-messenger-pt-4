@@ -34,19 +34,21 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
     const key = (_a = req.header("Authorization")) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
     try {
-        if (role === "admin") {
+        if (role == "admin") {
+            if (!key) {
+                return next((0, http_errors_1.default)(401, "Authorization key is required for admin role"));
+            }
             const keys = yield AdminKeyModel_1.default.findOne({ key });
-            console.log(keys);
             if (!keys) {
                 return next((0, http_errors_1.default)(401, "Invalid Authorization Key"));
             }
             else if (keys.key !== key) {
                 return next((0, http_errors_1.default)(401, "Invalid Authorization Key"));
             }
-            const existingUser = yield userModel_1.default.findOne({ username });
-            if (existingUser) {
-                return next((0, http_errors_1.default)(400, "Username already registered"));
-            }
+        }
+        const existingUser = yield userModel_1.default.findOne({ username: username });
+        if (existingUser) {
+            return next((0, http_errors_1.default)(400, "Username already registered"));
         }
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
         const newUser = yield userModel_1.default.create({
@@ -56,16 +58,12 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             role,
             status: status || "active",
         });
-        const token = (0, jsonwebtoken_1.sign)({ name: newUser.username, role: newUser.role }, config_1.config.jwtSecret, {
-            expiresIn: "7d",
-            algorithm: "HS256",
-        });
         res
             .status(201)
-            .json({ accessToken: token, message: "User created successfully" });
+            .json({ message: "User created successfully", data: newUser });
     }
     catch (err) {
-        console.error("Error while creating user:", err);
+        console.error("Error while creating user:", err.message);
         return next((0, http_errors_1.default)(500, "Error while creating user."));
     }
 });
@@ -98,7 +96,6 @@ const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
             role: user.role,
             token,
         });
-        console.log(`USERLOGIN ${user.username} WITH ROLE ${user.role}`);
     }
     catch (error) {
         next(error);
@@ -161,7 +158,7 @@ const getAgentByUsername = (req, res, next) => __awaiter(void 0, void 0, void 0,
 exports.getAgentByUsername = getAgentByUsername;
 const deleteAgent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { username: userToDelete } = req.body;
+        const { username: userToDelete } = req.params;
         const user = yield userModel_1.default.findOne({
             username: userToDelete,
             role: "agent",
@@ -225,7 +222,6 @@ const getAllTasks = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         res.json(tasks);
     }
     catch (error) {
-        console.log(error);
         return next((0, http_errors_1.default)(500, "Error fetching tasks"));
     }
 });
