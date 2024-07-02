@@ -30,14 +30,12 @@ const isAdmin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
             username: user,
             role: "admin",
         });
+        console.log(checkForAdmin);
         if (!checkForAdmin) {
             const _req = req;
             _req.userId = decodedToken.userId;
             _req.userRole = decodedToken.role;
             return next((0, http_errors_1.default)(401, "You are not an Admin"));
-        }
-        else {
-            console.log("YOU ARE ADMIN");
         }
         next();
     }

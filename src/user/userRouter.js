@@ -12,7 +12,7 @@ userRouter.get("/", (req, res, next) => {
     res.json({ message: "User Route" });
 });
 // REGISTER
-userRouter.post("/register", middleAuth_1.isAdmin, userController_1.createUser);
+userRouter.post("/register", userController_1.createUser);
 // LOGIN
 userRouter.post("/login", middleAuth_1.checkUserStatus, userController_1.loginUser);
 // GET ALL USERS

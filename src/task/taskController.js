@@ -48,10 +48,12 @@ const getTasks = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     try {
         let tasks;
         if (_req.userRole === "admin") {
-            tasks = yield taskModel_1.default.find();
+            tasks = yield taskModel_1.default.find().populate("agent", "name");
         }
         else if (_req.userRole === "agent") {
-            tasks = yield taskModel_1.default.find({ agent: _req.userId });
+            tasks = yield taskModel_1.default
+                .find({ agent: _req.userId })
+                .populate("agent", "name");
         }
         else {
             return next((0, http_errors_1.default)(403, "Access denied: Suspicious activity detected."));
