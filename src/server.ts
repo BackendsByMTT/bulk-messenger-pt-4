@@ -7,6 +7,7 @@ import adminKeyRouter from "./superAdminKey/AdminKeyRoutes";
 import trashRouter from "./trash/trashRouter";
 import cors from "cors";
 
+
 const app = express();
 const server = http.createServer(app);
 app.use(express.json());
