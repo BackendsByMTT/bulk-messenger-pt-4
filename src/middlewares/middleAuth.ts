@@ -23,14 +23,14 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
       role: "admin",
     });
 
+    console.log(checkForAdmin);
+
     if (!checkForAdmin) {
       const _req = req as AuthRequest;
       _req.userId = decodedToken.userId;
       _req.userRole = decodedToken.role;
 
       return next(createHttpError(401, "You are not an Admin"));
-    } else {
-      console.log("YOU ARE ADMIN");
     }
     next();
   } catch (error) {

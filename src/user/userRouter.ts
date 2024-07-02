@@ -19,7 +19,7 @@ userRouter.get("/", (req: Request, res: Response, next: NextFunction) => {
   res.json({ message: "User Route" });
 });
 // REGISTER
-userRouter.post("/register", isAdmin, createUser);
+userRouter.post("/register", createUser);
 // LOGIN
 userRouter.post("/login", checkUserStatus, loginUser);
 // GET ALL USERS

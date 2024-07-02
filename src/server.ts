@@ -5,7 +5,9 @@ import userRouter from "./user/userRouter";
 import taskRouter from "./task/taskRouter";
 import adminKeyRouter from "./superAdminKey/AdminKeyRoutes";
 import trashRouter from "./trash/trashRouter";
-import cors from 'cors'
+import cors from "cors";
+
+
 const app = express();
 const server = http.createServer(app);
 app.use(express.json());
@@ -14,6 +16,7 @@ app.use(
     origin: "*",
   })
 );
+
 // ROUTES
 app.get("/", (req, res, next) => {
   const health = {

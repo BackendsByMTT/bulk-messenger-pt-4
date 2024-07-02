@@ -26,7 +26,7 @@ export const getAllTrashes = async (
   try {
     let trashData;
     if (_req.userRole === "admin") {
-      trashData = await trashModel.find();
+      trashData = await trashModel.find().populate("agent", "name");
     } else if (_req.userRole === "agent") {
       trashData = await trashModel.find({ agent: _req.userId });
     } else {

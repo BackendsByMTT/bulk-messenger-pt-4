@@ -12,6 +12,7 @@ import trashModel from "../trash/trashModel";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const { username, name, password, role, status } = req.body;
+
   if (!username || !name || !password || !role) {
     const error = createHttpError(400, "All fields are required");
     return next(error);
@@ -28,19 +29,24 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const key = req.header("Authorization")?.split(" ")[1];
 
   try {
-    if (role === "admin") {
+    if (role == "admin") {
+      if (!key) {
+        return next(
+          createHttpError(401, "Authorization key is required for admin role")
+        );
+      }
+
       const keys = await AdminKeyModel.findOne({ key });
-      console.log(keys);
       if (!keys) {
         return next(createHttpError(401, "Invalid Authorization Key"));
       } else if (keys.key !== key) {
         return next(createHttpError(401, "Invalid Authorization Key"));
       }
+    }
 
-      const existingUser = await userModel.findOne({ username });
-      if (existingUser) {
-        return next(createHttpError(400, "Username already registered"));
-      }
+    const existingUser = await userModel.findOne({ username: username });
+    if (existingUser) {
+      return next(createHttpError(400, "Username already registered"));
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -53,20 +59,11 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
       status: status || "active",
     });
 
-    const token = sign(
-      { name: newUser.username, role: newUser.role },
-      config.jwtSecret as string,
-      {
-        expiresIn: "7d",
-        algorithm: "HS256",
-      }
-    );
-
     res
       .status(201)
-      .json({ accessToken: token, message: "User created successfully" });
+      .json({ message: "User created successfully", data: newUser });
   } catch (err) {
-    console.error("Error while creating user:", err);
+    console.error("Error while creating user:", err.message);
     return next(createHttpError(500, "Error while creating user."));
   }
 };
@@ -108,7 +105,6 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
       role: user.role,
       token,
     });
-    console.log(`USERLOGIN ${user.username} WITH ROLE ${user.role}`);
   } catch (error) {
     next(error);
   }
@@ -178,7 +174,7 @@ const getAgentByUsername = async (
 
 const deleteAgent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { username: userToDelete } = req.body;
+    const { username: userToDelete } = req.params;
     const user = await userModel.findOne({
       username: userToDelete,
       role: "agent",
@@ -247,7 +243,6 @@ const getAllTasks = async (req: Request, res: Response, next: NextFunction) => {
     const tasks = await taskModel.find({ agent: userId });
     res.json(tasks);
   } catch (error) {
-    console.log(error);
     return next(createHttpError(500, "Error fetching tasks"));
   }
 };

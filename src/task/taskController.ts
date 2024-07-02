@@ -59,9 +59,11 @@ const getTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
     let tasks;
     if (_req.userRole === "admin") {
-      tasks = await taskModel.find();
+      tasks = await taskModel.find().populate("agent", "name");
     } else if (_req.userRole === "agent") {
-      tasks = await taskModel.find({ agent: _req.userId });
+      tasks = await taskModel
+        .find({ agent: _req.userId })
+        .populate("agent", "name");
     } else {
       return next(
         createHttpError(403, "Access denied: Suspicious activity detected.")
